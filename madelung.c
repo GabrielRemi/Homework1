@@ -23,7 +23,7 @@ int odd(int num)
     return num % 2 == 0 ? 1 : -1;
 }
 
-// berechnet den Betrag einer Zahl des Typs double
+// berechnet den Betrag einer Zahl des Typs double (Die Funktion abs() ist nur für integers definiert)
 double absd(double x)
 {
     return x < 0? -x: x;
@@ -31,12 +31,12 @@ double absd(double x)
 
 
 //summiert nach evjen methode von 1 bis n (formel nach pdf dokument)
-// Summe in für Flachen Kristall über 2 Dimensionen
+// Summe für Flachen Kristall über 2 Dimensionen
 double evjen_method_2d(int n)
 {
-    double term1 = 0;
-    double term2 = 0;
-    double value;
+    double term1 = 0; // Erster Term, welcher über einen Index summiert wird
+    double term2 = 0; // Zweiter Term, welcher über beide Indizes summiert wird
+    double value;   // Laufvariable, in der Werte in der For-Schleife temporär gespeichert werden
 
     for (int i = 1; i <= n; i++)
     {
@@ -50,7 +50,7 @@ double evjen_method_2d(int n)
         {
             value = odd(i+j)/(sqrt((double)i*i + j*j));
             
-            // Evjen-Method
+            // Evjen-Methode
             if (i == n && j == n) value /= 4; //Es handelt sich um eine Ecke
             else if (i == n || j == n) value /=2; //Es handelt sich um eine Kante
 
@@ -67,21 +67,19 @@ double evjen_method_2d(int n)
 // Zur summation wurde die Formel aus dem PDF-Dokument verwendet (madelung = 8*term1 + 12*term2 +6*term3)
 double evjen_method(int n)
 {   
-    double alpha = 0;
+    double alpha = 0;  //Hier wird die Madelung-Konstante gespeichert
 
-    //double start_time = clock();
-
-    double term1 = 0;
-    double term2 = 0;
-    double term3 = 0;
-    double val = 0;  // temporäre Variable zum speichern der momentanen Rechnung
+    double term1 = 0;   // Summation über 3 Indizes
+    double term2 = 0;   // Summation über 2 Indizes
+    double term3 = 0;   // Summation über 1 Index
+    double val = 0;  // temporäre Variable zum speichern der momentanen Rechnung der Schleife
 
     for (int i = 1; i <=n; i++)
     {
         val = odd(i)/(double) i;
 
         //Evjen Methode
-        if (i == n) term3 += val /2; 
+        if (i == n) term3 += val /2; // Oberfläche
         else term3 += val;
          
         for (int j = 1; j <= n; j++)
@@ -89,8 +87,8 @@ double evjen_method(int n)
             val = odd(i + j)/(sqrt(i*i + j*j));
 
             //Evjen Methode
-            if (i == n && j == n) term2 += val/4;
-            else if (i == n || j == n) term2 += val/2;
+            if (i == n && j == n) term2 += val/4;   //  Kante
+            else if (i == n || j == n) term2 += val/2;  // Oberfläche
             else term2 += val;
 
             for (int k = 1; k <= n; k++)
@@ -98,9 +96,9 @@ double evjen_method(int n)
                 val = odd(i+j+k)/(sqrt(i*i + j*j + k*k));
             
                 //Evjen Methode
-                if (i == n && j == n && k == n) term1 += val/8;
-                else if ((i == n && j == n) || (i == n && k == n) || (j == n && k == n)) term1 += val/4;
-                else if (i == n || j == n || k == abs(n)) term1 += val/2;
+                if (i == n && j == n && k == n) term1 += val/8; // Ecke
+                else if ((i == n && j == n) || (i == n && k == n) || (j == n && k == n)) term1 += val/4;    //Kante
+                else if (i == n || j == n || k == abs(n)) term1 += val/2;   // Oberfläche
                 else term1 += val;
             }
         }
@@ -109,14 +107,11 @@ double evjen_method(int n)
     alpha = 8*term1 + 12*term2 + 6*term3;
 
 
-    //double time = (clock()-start_time)/CLOCKS_PER_SEC;
-    //printf("Dauer: %.5f s\n", time);
-
     return -alpha;
 }
 
 /*Berechnet den Wert, gegen die eine Summe konvergiert. 
-Hierfür wird die summe für ein n+1 ausgewertet sowie für n und die relative Differenz berechnet.
+Hierfür wird die summe für ein n sowie n+1 ausgewertet und die relative Differenz berechnet.
 Dieser Prozess wird so lange geführt, bis die gewünschte Genauigkeit des Wertes erreicht ist. 
 Falls eine Konvergenz nicht erreicht wird, wird die Schleife vorzeitig abgebrochen
 Dies ist für beliebige Funktionen des typs double mit einem Argument des Typs int möglich*/
@@ -163,9 +158,9 @@ double potential_energy(double madelung)
     return - madelung* 1/(4*M_PI*VACUUM_PERMITTIVITY) *CHARGE/LATTICE_CONSTANT;
 }
 
-//##############################################
+//##########################################################################
 //                 MAIN
-//##############################################
+//##########################################################################
 int main()
 {
     //######################################################
