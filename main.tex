@@ -10,7 +10,7 @@
 \usepackage{mathtools}
 \usepackage{graphicx}
 \usepackage{hyperref}
-%\usepackage{siunitx}
+\usepackage{siunitx}
 \usepackage{geometry}
 
 % setup for packages
@@ -68,7 +68,7 @@ Gitterbaustein wird o.B.d.A ein Natrium-Ion (positiv geladen) (siehe Abbildung \
     V_{i,j,k} = \frac{e}{4\pi\epsilon_0}\frac{e_{i,j,k}}{r_{i,j,k}}, \quad r_{i,j,k} = a \sqrt{i^2 + j^2 + k^2}
 \end{equation*} wobei die Indizes $i,j,k$ den Gitterplatz eines anderen Ions beschreiben. Dann folgt sofort
 \begin{equation*}
-    V = \sum_{i,j,k=-n}^{n} V_{i,j,k} = \sum_{i,j,k=-n}^{n} \frac{e}{4\pi\epsilon_0} \frac{e_{i,j,k}}{a \sqrt{i^2 + j^2 + k^2}} = \frac{1}{4\pi\epsilon_0} \frac{e^2}{a} \sum_{i,j,k=-n}^{n} \frac{(-1)   ^{i+j+k}}{\sqrt{i^2 + j^2 + k^2}} = \frac{1}{4\pi\epsilon_0} \frac{e^2}{a} \alpha,
+    V = \sum_{i,j,k=-n}^{n} V_{i,j,k} = \sum_{i,j,k=-n}^{n} \frac{e}{4\pi\epsilon_0} \frac{e_{i,j,k}}{a \sqrt{i^2 + j^2 + k^2}} = \frac{1}{4\pi\epsilon_0} \frac{e^2}{a} \sum_{i,j,k=-n}^{n} \frac{(-1)   ^{i+j+k}}{\sqrt{i^2 + j^2 + k^2}} = -\frac{1}{4\pi\epsilon_0} \frac{e^2}{a} \alpha,
 \end{equation*} wobei im vorletzten Schritt die alternierende Abfolge von positiven und negativen Ladungen im\newline Natriumchlorid-Kristall ausgenutzt wurde (negativer Beitrag,
 wenn $i+j+k$ ungerade ist, was einer negativen Ladung (ungerade Anzahl an Gitterplatz-Schritten bis zum positiv geladenen Referenz-Ion) entspricht und positiver Beitrag, wenn $i+j+k$ gerade ist, was einer positiven Ladung (gerade Anzahl
 an Gitterplatz-Schritten bis zum positiv geladenen Referenz-Ion) entspricht). $\alpha$ bezeichnet die sogenannte Madelung-Konstante für einen Natriumchlorid-Kristall. Der Term $i=j=k=0$ ist wegzulassen. Die Bezeichnung dieser Reihe mit einer Konstanten ist gerechtfertigt, da diese
@@ -80,11 +80,35 @@ für die Implementierung ist, da von $-n$ bis $n$ summiert wird. Eine Summation 
 \end{equation*}
 Für eine endliche Zahl $n$ kann dieser Algorithmus nun mit den entsprechenden Gewichten (Evjen-Methode) implementiert werden. Das Ergebnis ist die Madelung-Konstante für einen Natriumchlorid-Kristall.\\ \\
 
-\noindent 2. \textbf{KURZE ERKLÄRUNG ZUM CODE UND DANN DISKUSSION DER ERGEBNISSE}
+\noindent 2. Der oben entwickelte Algorithmus wird durch die Benutzung von insgesamt drei for-Schleifen realisiert, die für die Summation über ($i,j,k$), ($i,j$) und ($i$) zuständig sind. Die Gewichtung wird mit entsprechenden if-Statements vorgenommen. In jeder for-Schleife wird das Ergebnis der momentanten Rechnung in einer temporären Variablen gespeichert,
+sodass das Endergebnis nach den for-Schleifen durch die obige Formel gegeben ist. Mit dem implementierten Verfahren ergibt sich folgender Wert für die Madelung-Konstante mit einer relativen Genauigeit von $10^{-5}$:
+\begin{equation*}
+    \alpha = 1.74756
+\end{equation*} Ein Vergleich mit dem Literaturwert $\alpha = 1.74756$ \cite{key4} zeigt den Erfolg des implementierten Verfahrens auf. Die Konvergenz für den Wert, welcher sich bei einer relativen Genauigkeit von $10^{-5}$ ergibt, tritt bereits bei $n=47$ (siehe Code) auf.
+Mit den Konstanten \cite{key4} $e = 1.602176565 \cdot 10^{-19} \si{\coulomb}$, $\epsilon_0 = 8.854187817 \cdot 10^{-12}\frac{\si{\farad}}{\si{\metre}}$ und $a = 564 \cdot 10^{-12} \si{\metre}$ berechnet sich mit einer relativen Genauigeit von $10^{-5}$ die elektromagnetische Energie eines einzelnen Gitterbausteins im dreidimensionalen Natriumchlorid-Kristall zu:
+\begin{equation*}
+    V = -4.46176 \si{\electronvolt}
+\end{equation*} Hier ist ein Vergleich mit einem Literaturwert nicht sonderlich aussagekräftig, da in den meisten Fällen bei der Berechnung der Energie zusätzlich die kurzreichweitige Abstoßung von zwei Ionen aufgrund des Pauli-Prinzips berücksichtigt wird \cite{key4}. Ein Vergleich mit dem Wert $V = -7.92 \si{\electronvolt}$
+aus dem Lehrbuch von R. Gross und A. Marx zeigt dennoch auf, dass das Ergebnis in der richtigen Größenordnung liegt und Abweichungen durch das Ignorieren von weiteren Energiebeiträgen zustande kommen.
+
 
 \section*{Flacher Kristall}\label{sec:flach}
 
-3. \textbf{NOCH ZU MACHEN}
+3. In diesem Aufgabenteil wird die Energie für einen flachen Natriumchlorid-Kristall (immer noch in drei Dimensionen) berechnet. Dementsprechend ist die Summation mit der Zusatzbedingung $j_3 = i_3$ durchzuführen. Dann ist $r_{ij} = a\sqrt{(i_1 - j_1)^2 + (i_2 - j_2)^2}$, womit nach einem analogen Vorgehen wie im ersten Aufgabenteil für die Energie folgt:
+\begin{equation*}
+    V = \sum_{i,j=-n}^{n} V_{i,j} = \sum_{i,j=-n}^{n} \frac{e}{4\pi\epsilon_0} \frac{e_{i,j}}{a\sqrt{i^2 + j^2}} = \frac{1}{4\pi\epsilon_0} \frac{e^2}{a} \sum_{i,j=-n}^{n} \frac{(-1)^{i+j}}{\sqrt{i^2 + j^2}} = -\frac{1}{4\pi\epsilon_0} \frac{e^2}{a} \alpha
+\end{equation*} Auch hier ist natürlich eine Summation von $1$ bis $n$ effizienter:
+\begin{equation*}
+    \sum_{i,j=-n}^{n} \frac{(-1)^{i+j}}{\sqrt{i^2 + j^2}} = 4\sum_{i,j=1}^{n} \frac{(-1)^{i+j}}{\sqrt{i^2 + j^2}} + 4\sum_{i=1}^{n} \frac{(-1)^{i}}{i}
+\end{equation*} Der Beweis dieses Zusammenhangs erfolgt analog wie der angegebene Beweis im \hyperref[sec:anhang]{Anhang}. Auch die Konvergenz dieser Reihe wurde für expandierende Quadrate von D. Borwein, J. M. Borwein und K. F. Taylor bewiesen. Nach der Evjen-Methode werden die Ladungen an den Ecken mit $\frac{1}{4}$ und die Ladungen an Kanten mit $\frac{1}{2}$ gewichtet.
+Offensichtlich erfolgt diese Implementierung des Verfahrens analog wie im vorherigen Aufgabenteil, jedoch wird eine for-Schleife weggelassen. Für die Madelung-Konstante ergibt sich dann für eine relative Genauigkeit von $10^{-5}$:
+\begin{equation*}
+    \alpha = 1.61554
+\end{equation*} Damit folgt für die elektromagnetische Energie eines einzelnen Gitterbausteins für einen flachen Natriumchlorid-Kristall:
+\begin{equation*}
+    V = -4.12469 \si{\electronvolt}
+\end{equation*} Hierzu lässt sich kein Vergleich mit einem Literaturwert aufführen, jedoch sind die Ergebnisse besonders auf Grundlage der guten Ergebnisse des vorherigen Aufgabenteiles sehr plausibel.
+
 
 \section*{Anhang}\label{sec:anhang}
 
