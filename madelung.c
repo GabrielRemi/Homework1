@@ -1,9 +1,21 @@
+// Kompilier Befehl: gcc madelung.c -o madelung -lm
+// Ausführbefehl: ./madelung
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
 #include<time.h>
+#include<stdbool.h>
 
-#define MADELUNG 1.747564594633
+#define MADELUNG 1.747564594633 // Quelle: https://de.wikipedia.org/wiki/Madelung-Konstante
+#define CHARGE 1.602176634e-19 // in Coulomb, Quelle: https://de.wikipedia.org/wiki/Elementarladung
+#define VACUUM_PERMITTIVITY 8.8541878128e-12 // Farad/meter, Quelle: https://en.wikipedia.org/wiki/Vacuum_permittivity
+#define LATTICE_CONSTANT 564e-12 // meter, Quelle: https://www.princeton.edu/~maelabs/mae324/glos324/nacl.htm#:~:text=NaCl%2C%20Sodium%20Chloride%2C%20Salt&text=The%20crystal%20lattice%20parameter%20is%200.563%20nm.
+
+
+// definiere einen Funktionstypen, der für ein bestimmtes n eine Summe berechnet
+typedef double (*sum_func)(int);
+
 
 // gibt 1 wieder bei gerader Zahl und -1 bei ungerader Zahl
 int odd(int num)
@@ -17,39 +29,42 @@ double absd(double x)
     return x < 0? -x: x;
 }
 
-double algo1(int n)
+
+//summiert nach evjen methode von 1 bis n (formel nach pdf dokument)
+// Summe in für Flachen Kristall über 2 Dimensionen
+double evjen_method_2d(int n)
 {
-     double alpha = 0;
+    double term1 = 0;
+    double term2 = 0;
+    double value;
 
-    //double start_time = clock();
+    for (int i = 1; i <= n; i++)
+    {
+        value =  odd(i)/(double) i;
+        
+        //Evjen-Methode
+        if (i == n) value /= 2; // Es handelt sich um eine Kante
+        term1 += value;
 
-    double val = 0;  // temporäre Variable zum speichern der momentanen Rechnung
-
-    for (int i = -n; i <=n; i++)
-    { 
-        for (int j = -n; j <= n; j++)
+        for (int j = 1; j <= n; j++)
         {
-            for (int k = -n; k <= n; k++)
-            {
-                if (i == 0 && j == 0 && k == 0) continue;
+            value = odd(i+j)/(sqrt((double)i*i + j*j));
+            
+            // Evjen-Method
+            if (i == n && j == n) value /= 4; //Es handelt sich um eine Ecke
+            else if (i == n || j == n) value /=2; //Es handelt sich um eine Kante
 
-                val = odd(i+j+k)/(sqrt(i*i + j*j + k*k));
+            term2 += value;
 
-                //Evjen Methode
-                if (abs(i) == n && abs(j) == n && abs(k) == n) val/=8;
-                else if ((abs(i) == n && abs(j) == n) || (abs(i) == n && abs(k) == n) || (abs(j) == n && abs(k) == n)) val/=4;
-                else if (abs(i) == n || abs(j) == n || abs(k) == n) val/=2;
-                
-                alpha += val;
-            }
         }
     }
 
-
-    return -alpha;
+    return -4*(term1 + term2);
 }
 
+
 // summiert von 1 bis n (effektiver)
+// Zur summation wurde die Formel aus dem PDF-Dokument verwendet (madelung = 8*term1 + 12*term2 +6*term3)
 double evjen_method(int n)
 {   
     double alpha = 0;
@@ -81,7 +96,7 @@ double evjen_method(int n)
             for (int k = 1; k <= n; k++)
             {
                 val = odd(i+j+k)/(sqrt(i*i + j*j + k*k));
-
+            
                 //Evjen Methode
                 if (i == n && j == n && k == n) term1 += val/8;
                 else if ((i == n && j == n) || (i == n && k == n) || (j == n && k == n)) term1 += val/4;
@@ -100,22 +115,23 @@ double evjen_method(int n)
     return -alpha;
 }
 
-//##############################################
-//                 MAIN
-//##############################################
-int main()
+/*Berechnet den Wert, gegen die eine Summe konvergiert. 
+Hierfür wird die summe für ein n+1 ausgewertet sowie für n und die relative Differenz berechnet.
+Dieser Prozess wird so lange geführt, bis die gewünschte Genauigkeit des Wertes erreicht ist. 
+Falls eine Konvergenz nicht erreicht wird, wird die Schleife vorzeitig abgebrochen
+Dies ist für beliebige Funktionen des typs double mit einem Argument des Typs int möglich*/
+double calculate_convergence(sum_func f)
 {
     int n = 1;
     double eps_rel = 1e-8; // gewünschte relative Genauigkeit des Wertes
-    double eps = 1e-6; // gewünschte Genauigkeit des Wertes
-    double current_eps_rel;
-    double current_eps;
+    double current_eps_rel;// momentane relative Genauigkeit in der späteren while-Schleife
+    
 
     // berechne für erstes n einen Wert für die Madelung Konstante
-    double old_madelung = evjen_method(n);
+    double old_value = f(n);
 
-    
-    double madelung;
+    // hier wird der Wert der Konvergenz gespeichert
+    double value;
 
     // Messe Zeit der While Schleife
     double start_time = clock();
@@ -124,20 +140,53 @@ int main()
     {
         // Erhöhe n und berechne die neue Konstante
         n += 1;
-        madelung = evjen_method(n);
-        // vergleiche beide Werte miteinander und wiederhole das Verfahren, wenn die Differenz zu hoch ist
-        current_eps_rel = absd(madelung - old_madelung)/madelung;
-        current_eps = absd(madelung - old_madelung);
+        value = f(n);
 
-        old_madelung = madelung;
+        // vergleiche beide Werte miteinander und wiederhole das Verfahren, wenn die Differenz zu hoch ist
+        current_eps_rel = absd((value - old_value)/value);
+    
+        old_value = value;
 
         if (current_eps_rel < eps_rel || n > 300) break;
     }
     
     double time = (clock() - start_time)/CLOCKS_PER_SEC;
+    printf("Konvergenz bei n = %d\n", n);
 
-    printf("Iteration: n = %d\n", n);
+    return value;
+}
+
+
+// berechne die Bindungsenergie im Kristal in eV
+double potential_energy(double madelung)
+{
+    return - madelung* 1/(4*M_PI*VACUUM_PERMITTIVITY) *CHARGE/LATTICE_CONSTANT;
+}
+
+//##############################################
+//                 MAIN
+//##############################################
+int main()
+{
+    //######################################################
+    //                  AUFGABE 2
+    //##############################################
+    printf("AUFGABE 2\n");
+    double madelung = calculate_convergence(evjen_method);
     printf("Madelung Konstante: %.5f\n", madelung);
     printf("Referenzwert: %.5f\n", MADELUNG);
-    printf("Dauer: %.3f s", time);
+    //printf("Dauer: %.3f s\n", time);
+
+    printf("Bindungsenergie: V = %.5f eV\n\n", potential_energy(madelung));
+
+    //######################################################
+    //                  AUFGABE 3
+    //######################################################
+    printf("AUFGABE 3\n");
+    madelung = calculate_convergence(evjen_method_2d);
+    printf("Madelung Konstante: %.5f\n", madelung);
+
+    printf("Bindungsenergie: V = %.5f eV\n\n", potential_energy(madelung));
+
+
 }
